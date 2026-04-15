@@ -1,0 +1,26 @@
+# Core scraping
+python-jobspy>=1.1.82
+requests>=2.31.0
+
+# PDF parsing
+pdfminer.six>=20221105
+
+# NLP / resume parsing
+spacy>=3.7.0
+# After installing spacy, run: python -m spacy download en_core_web_sm
+
+# Semantic matching (downloads ~90MB model on first use)
+sentence-transformers>=2.7.0
+
+# Keyword matching
+scikit-learn>=1.4.0
+
+# Data handling & export
+pandas>=2.2.0
+openpyxl>=3.1.2        # Excel export
+
+# HTML report
+jinja2>=3.1.3
+
+# Config / env loading
+python-dotenv>=1.0.0
