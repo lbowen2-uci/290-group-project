@@ -51,6 +51,37 @@ KNOWN_SKILLS = {
     "statistics", "a/b testing", "hypothesis testing", "data visualization",
     "business intelligence", "financial modeling", "supply chain",
     "marketing analytics", "product analytics",
+    # More languages & tools
+    "php", "ruby", "swift", "kotlin", "html", "css", "perl", "julia",
+    "r studio", "sas", "spss", "vba",
+    # More ML / AI
+    "huggingface", "langchain", "openai api", "generative ai", "bert",
+    "opencv", "nltk", "statsmodels", "scipy", "mlflow", "wandb",
+    "dask", "polars", "pyspark", "feature engineering", "model deployment",
+    "data pipeline", "llm", "prompt engineering", "rag",
+    # More data platforms
+    "hive", "cassandra", "dynamodb", "oracle", "clickhouse", "neo4j",
+    "pinecone", "apache flink", "mariadb", "sqlite", "sql server",
+    "azure synapse", "data warehouse", "data lake", "data lakehouse",
+    # More BI / viz
+    "d3.js", "ggplot2", "shiny", "grafana", "kibana", "qlik",
+    "alteryx", "google data studio", "power automate",
+    # More cloud / DevOps / engineering
+    "jenkins", "github actions", "gitlab ci", "ansible", "helm",
+    "prefect", "dagster", "serverless", "aws lambda", "aws s3",
+    "rest api", "graphql", "microservices", "fastapi", "flask", "django",
+    "api development", "azure devops", "cloud computing",
+    "object oriented programming", "functional programming",
+    "unit testing", "test driven development",
+    # Process / Business
+    "agile", "scrum", "jira", "confluence", "saas",
+    "data engineering", "data governance", "data quality", "data modeling",
+    "etl", "cohort analysis", "funnel analysis", "churn prediction",
+    "recommendation systems", "risk modeling", "sentiment analysis",
+    "text mining", "web scraping", "google analytics", "mixpanel",
+    "amplitude", "segment", "pricing analysis", "competitive analysis",
+    "product management", "stakeholder management", "data storytelling",
+    "nosql", "t-sql", "pl/sql", "spark streaming", "real-time analytics",
 }
 
 

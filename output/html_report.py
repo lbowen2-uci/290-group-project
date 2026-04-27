@@ -53,6 +53,26 @@ TEMPLATE = """<!DOCTYPE html>
              box-shadow: 0 1px 3px rgba(0,0,0,.1); }
   .summary h2 { margin-top: 0; font-size: 16px; }
   .summary p  { margin: 4px 0; font-size: 14px; color: #495057; }
+  /* ---- Market Summary / Stats ---- */
+  .stats-section { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 24px;
+                   box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .stats-section h2 { margin-top: 0; color: #343a40; border-bottom: 2px solid #e9ecef; padding-bottom: 12px; }
+  .stats-section h3 { font-size: 15px; color: #495057; margin: 20px 0 8px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px; margin-bottom: 20px; }
+  .stat-card  { background: #f8f9fa; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-value { font-size: 28px; font-weight: 700; color: #0d6efd; }
+  .stat-label { font-size: 12px; color: #6c757d; margin-top: 4px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .chart-img  { width: 100%; border-radius: 6px; border: 1px solid #e9ecef; }
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .stats-table th { text-align: left; padding: 8px 12px; background: #f8f9fa;
+                    border-bottom: 2px solid #dee2e6; color: #495057; }
+  .stats-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; }
+  .stats-table tr:last-child td { border-bottom: none; }
+  .stats-subsection { margin-top: 20px; }
+  .stats-note { font-size: 13px; color: #6c757d; margin: 4px 0 8px; }
+  @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -67,6 +87,82 @@ TEMPLATE = """<!DOCTYPE html>
   {% if profile.location %}<p><strong>Location:</strong> {{ profile.location }}{% if profile.remote_ok %} (remote OK){% endif %}</p>{% endif %}
   {% if profile.experience_years %}<p><strong>Experience:</strong> {{ profile.experience_years }} years</p>{% endif %}
 </div>
+
+{% if stats %}
+<div class="stats-section">
+  <h2>Market Summary</h2>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.meta.total_jobs }}</div>
+      <div class="stat-label">Jobs Analyzed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.meta.sources | length }}</div>
+      <div class="stat-label">Data Sources</div>
+    </div>
+    {% if stats.time_on_market.avg_days is not none %}
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.time_on_market.avg_days | int }}</div>
+      <div class="stat-label">Avg Days Listed</div>
+    </div>
+    {% endif %}
+    {% if stats.salary.n_with_salary %}
+    <div class="stat-card">
+      <div class="stat-value">${{ (stats.salary.median / 1000) | round | int }}K</div>
+      <div class="stat-label">Median Salary</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if b64_charts %}
+  <div class="chart-grid">
+    {% if b64_charts.time_on_market %}
+    <img class="chart-img" src="{{ b64_charts.time_on_market }}" alt="Time on Market">
+    {% endif %}
+    {% if b64_charts.top_skills %}
+    <img class="chart-img" src="{{ b64_charts.top_skills }}" alt="Top Skills Demanded">
+    {% endif %}
+    {% if b64_charts.skill_gap %}
+    <img class="chart-img" src="{{ b64_charts.skill_gap }}" alt="Skill Gap Analysis">
+    {% endif %}
+    {% if b64_charts.salary %}
+    <img class="chart-img" src="{{ b64_charts.salary }}" alt="Salary Distribution">
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if stats.top_skills %}
+  <div class="stats-subsection">
+    <h3>Top Skills in Demand</h3>
+    <table class="stats-table">
+      <thead><tr><th>Skill</th><th>Jobs</th><th>% of Listings</th></tr></thead>
+      <tbody>
+        {% for s in stats.top_skills[:10] %}
+        <tr><td>{{ s.skill }}</td><td>{{ s.count }}</td><td>{{ s.pct_of_jobs }}%</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if stats.skill_gap.missing %}
+  <div class="stats-subsection">
+    <h3>Skills to Add to Your Resume</h3>
+    <p class="stats-note">These in-demand skills weren't found in your profile:</p>
+    <table class="stats-table">
+      <thead><tr><th>Skill</th><th>Demand (# Jobs)</th></tr></thead>
+      <tbody>
+        {% for m in stats.skill_gap.missing %}
+        <tr><td>{{ m.skill }}</td><td>{{ m.demand_count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
 
 {% for job in jobs %}
 {% set pct = (job.match_score * 100) | round(1) %}
@@ -113,11 +209,24 @@ TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 
+def _b64_png(png_bytes: bytes) -> str:
+    import base64
+    return "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
+
+
+def _prepare_b64_charts(charts: dict | None) -> dict:
+    if not charts:
+        return {}
+    return {k: _b64_png(v) for k, v in charts.items()}
+
+
 def export_html(
     jobs: list[Job],
     profile: UserProfile,
     output_path: str = "report.html",
     top_n: int = 50,
+    stats: dict | None = None,
+    charts: dict | None = None,
 ) -> str:
     """
     Render a ranked HTML report of the top N jobs.
@@ -144,6 +253,8 @@ def export_html(
         jobs=jobs[:top_n],
         profile=profile,
         generated_at=datetime.now().strftime("%Y-%m-%d %H:%M"),
+        stats=stats,
+        b64_charts=_prepare_b64_charts(charts),
     )
 
     path = Path(output_path)

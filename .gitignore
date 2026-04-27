@@ -1,0 +1,45 @@
+# --- Secrets ---
+.env
+
+# --- Job search outputs (kept local) ---
+report.html
+jobs_output.csv
+jobs_output.xlsx
+jobs.db
+stats.json
+stats.md
+charts/
+
+# Catch any future output files by pattern
+*.db
+*_output.*
+stats_*.json
+stats_*.md
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp

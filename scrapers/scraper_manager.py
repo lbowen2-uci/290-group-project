@@ -10,6 +10,7 @@ from scrapers.base import BaseScraper
 from scrapers.jobspy_scraper import JobSpyScraper
 from scrapers.remotive_scraper import RemotiveScraper
 from scrapers.adzuna_scraper import AdzunaScraper
+from scrapers.jsearch_scraper import JSearchScraper
 
 
 def _build_scrapers(config: dict, enabled: list[str]) -> list[BaseScraper]:
@@ -18,6 +19,7 @@ def _build_scrapers(config: dict, enabled: list[str]) -> list[BaseScraper]:
         "jobspy": JobSpyScraper,
         "remotive": RemotiveScraper,
         "adzuna": AdzunaScraper,
+        "jsearch": JSearchScraper,
     }
     scrapers = []
     for name in enabled:

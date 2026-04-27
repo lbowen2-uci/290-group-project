@@ -29,6 +29,9 @@ from matching.semantic_matcher import score_jobs_semantic
 from output.csv_exporter import export_csv, export_excel
 from output.html_report import export_html
 from output.db_store import save_results
+from output.stats_exporter import export_stats_json, export_stats_markdown, export_stats_charts
+from analytics.stats_generator import compute_stats
+from analytics.charts import render_charts
 
 
 def parse_args():
@@ -125,8 +128,15 @@ def score_jobs(jobs, profile, mode: str):
             return score_jobs_keyword(profile, jobs)
 
 
-def write_output(jobs, profile, output_format: str, top_n: int):
-    """Write results in the requested format(s)."""
+def write_output(
+    jobs,
+    profile,
+    output_format: str,
+    top_n: int,
+    stats: dict | None = None,
+    charts: dict | None = None,
+):
+    """Write results in the requested format(s) and always emit summary stats."""
     top_jobs = jobs[:top_n]
 
     if output_format in ("csv", "all"):
@@ -134,9 +144,15 @@ def write_output(jobs, profile, output_format: str, top_n: int):
     if output_format in ("excel", "all"):
         export_excel(top_jobs)
     if output_format in ("html", "all"):
-        export_html(top_jobs, profile)
+        export_html(top_jobs, profile, stats=stats, charts=charts)
     if output_format in ("db", "all"):
         save_results(top_jobs, profile)
+
+    # Always write standalone stats files (cheap, always useful)
+    if stats:
+        export_stats_json(stats)
+        export_stats_markdown(stats)
+        export_stats_charts(charts or {})
 
 
 def main():
@@ -167,16 +183,21 @@ def main():
     # 3. Score / rank
     scored_jobs = score_jobs(jobs, profile, matching_mode)
 
-    # 4. Print preview
+    # 4. Aggregate statistics (computed on all scored jobs, not just top-N)
+    print("\n[main] Computing market statistics...")
+    stats = compute_stats(scored_jobs, profile)
+    charts = render_charts(stats)
+
+    # 5. Print preview
     print(f"\n{'Rank':<5} {'Score':>6}  {'Title':<40} {'Company':<25} {'Location'}")
     print("-" * 110)
     for i, job in enumerate(scored_jobs[:10], 1):
         score_pct = f"{job.match_score * 100:.1f}%"
         print(f"{i:<5} {score_pct:>6}  {job.title[:38]:<40} {job.company[:23]:<25} {job.location}")
 
-    # 5. Export
+    # 6. Export
     print()
-    write_output(scored_jobs, profile, args.output, args.top)
+    write_output(scored_jobs, profile, args.output, args.top, stats=stats, charts=charts)
     print("\nDone.")
 
 
