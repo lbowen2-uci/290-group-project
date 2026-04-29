@@ -59,6 +59,7 @@ def _jobs_to_rows(jobs: list[Job]) -> list[dict]:
     return [
         {
             "match_score": round(job.match_score * 100, 1),
+            "claude_score": round(job.claude_score * 100, 1) if job.claude_score is not None else "",
             "title": job.title,
             "company": job.company,
             "location": job.location,
@@ -66,6 +67,9 @@ def _jobs_to_rows(jobs: list[Job]) -> list[dict]:
             "source": job.source,
             "posted_date": job.posted_date,
             "matched_skills": ", ".join(job.matched_skills),
+            "growth_potential": job.growth_potential,
+            "fit_reasoning": job.fit_reasoning,
+            "concern": job.concern,
             "url": job.url,
         }
         for job in jobs

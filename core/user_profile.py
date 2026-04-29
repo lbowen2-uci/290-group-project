@@ -17,9 +17,17 @@ class UserProfile:
     job_type: str = "full-time"  # full-time, part-time, contract, internship
     goals: str = ""
     raw_text: str = ""  # full text blob used for semantic matching
+    # Claude-enriched fields (populated when ANTHROPIC_API_KEY is set)
+    career_narrative: str = ""
+    inferred_goals: str = ""
+    strengths: list[str] = field(default_factory=list)
+    career_level: str = ""
+    search_queries: list[str] = field(default_factory=list)
 
     def to_search_query(self) -> str:
         """Build a concise search string for job API queries."""
+        if self.search_queries:
+            return self.search_queries[0]
         if self.job_titles:
             return self.job_titles[0]
         if self.skills:
@@ -35,6 +43,10 @@ class UserProfile:
             f"Education: {self.education}" if self.education else "",
             f"Industry: {self.industry}" if self.industry else "",
             f"Goals: {self.goals}" if self.goals else "",
+            f"Career narrative: {self.career_narrative}" if self.career_narrative else "",
+            f"Inferred goals: {self.inferred_goals}" if self.inferred_goals else "",
+            f"Strengths: {', '.join(self.strengths)}" if self.strengths else "",
+            f"Career level: {self.career_level}" if self.career_level else "",
             self.raw_text,
         ]
         return "\n".join(s for s in sections if s)
@@ -56,6 +68,12 @@ class Job:
     posted_date: str = ""
     match_score: float = 0.0
     matched_skills: list[str] = field(default_factory=list)
+    # Claude re-ranking fields (populated when ANTHROPIC_API_KEY is set)
+    claude_score: Optional[float] = None
+    fit_reasoning: str = ""
+    growth_potential: str = ""
+    key_match: str = ""
+    concern: str = ""
 
     def dedup_key(self) -> str:
         """Unique key for deduplication across scrapers."""

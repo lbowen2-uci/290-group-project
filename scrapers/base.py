@@ -20,13 +20,20 @@ class BaseScraper(ABC):
         self.config = config
 
     @abstractmethod
-    def fetch(self, profile: UserProfile, max_results: int = 50) -> list[Job]:
+    def fetch(
+        self,
+        profile: UserProfile,
+        max_results: int = 50,
+        query_override: str | None = None,
+    ) -> list[Job]:
         """
         Fetch job postings relevant to the given UserProfile.
 
         Args:
-            profile:     The user's profile (skills, location, titles, etc.)
-            max_results: Maximum number of results to return.
+            profile:        The user's profile (skills, location, titles, etc.)
+            max_results:    Maximum number of results to return.
+            query_override: If provided, use this search term instead of
+                            profile.to_search_query().
 
         Returns:
             List of normalized Job objects.

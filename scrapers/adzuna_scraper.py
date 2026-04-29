@@ -26,7 +26,7 @@ class AdzunaScraper(BaseScraper):
 
     name = "adzuna"
 
-    def fetch(self, profile: UserProfile, max_results: int = 50) -> list[Job]:
+    def fetch(self, profile: UserProfile, max_results: int = 50, query_override: str | None = None) -> list[Job]:
         app_id = self.config.get("adzuna_app_id", "")
         app_key = self.config.get("adzuna_app_key", "")
 
@@ -35,7 +35,7 @@ class AdzunaScraper(BaseScraper):
             return []
 
         country = self.config.get("adzuna_country", DEFAULT_COUNTRY)
-        search_term = profile.to_search_query()
+        search_term = query_override or profile.to_search_query()
         location = profile.location or ""
 
         # Adzuna paginates at 50 results/page

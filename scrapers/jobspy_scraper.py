@@ -20,7 +20,7 @@ class JobSpyScraper(BaseScraper):
     # Subset of sites to scrape — can be overridden via config
     DEFAULT_SITES = ["linkedin", "indeed", "glassdoor", "zip_recruiter"]
 
-    def fetch(self, profile: UserProfile, max_results: int = 50) -> list[Job]:
+    def fetch(self, profile: UserProfile, max_results: int = 50, query_override: str | None = None) -> list[Job]:
         try:
             from jobspy import scrape_jobs
         except ImportError:
@@ -30,7 +30,7 @@ class JobSpyScraper(BaseScraper):
             )
 
         sites = self.config.get("jobspy_sites", self.DEFAULT_SITES)
-        search_term = profile.to_search_query()
+        search_term = query_override or profile.to_search_query()
         location = profile.location or None
 
         remote_label = " | Remote: Yes" if profile.remote_ok else ""

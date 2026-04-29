@@ -43,6 +43,13 @@ def get_config() -> dict:
         # "semantic" (default, uses sentence-transformers)
         # "keyword"  (faster, uses TF-IDF, no GPU needed)
         "matching_mode": os.getenv("MATCHING_MODE", "semantic"),
+
+        # --- Anthropic / Claude (optional — all features fall back without key) ---
+        # Register at: https://console.anthropic.com/
+        "anthropic_api_key": os.getenv("ANTHROPIC_API_KEY", ""),
+        "claude_model": os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6"),
+        "claude_rerank_top_n": int(os.getenv("CLAUDE_RERANK_TOP_N", "25")),
+        "claude_batch_size": int(os.getenv("CLAUDE_BATCH_SIZE", "10")),
     }
 
 

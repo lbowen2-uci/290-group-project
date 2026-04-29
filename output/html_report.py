@@ -72,6 +72,13 @@ TEMPLATE = """<!DOCTYPE html>
   .stats-table tr:last-child td { border-bottom: none; }
   .stats-subsection { margin-top: 20px; }
   .stats-note { font-size: 13px; color: #6c757d; margin: 4px 0 8px; }
+  /* ---- Claude Analysis ---- */
+  .claude-analysis { background: #f3f0ff; border-left: 3px solid #7c3aed;
+                     border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 12px; }
+  .claude-analysis .fit-reasoning { margin: 0 0 6px; font-size: 13px; color: #3b1a8c; }
+  .claude-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #5b21b6; }
+  .claude-meta span { background: #ede9fe; padding: 2px 8px; border-radius: 10px; }
+  .claude-concern { color: #92400e; background: #fef3c7 !important; }
   @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -165,7 +172,8 @@ TEMPLATE = """<!DOCTYPE html>
 {% endif %}
 
 {% for job in jobs %}
-{% set pct = (job.match_score * 100) | round(1) %}
+{% set display_score = job.claude_score if job.claude_score is not none else job.match_score %}
+{% set pct = (display_score * 100) | round(1) %}
 <div class="job">
   <div class="job-header">
     <div>
@@ -174,7 +182,7 @@ TEMPLATE = """<!DOCTYPE html>
       <p class="location">{{ job.location }}{% if not job.location %} &mdash; Location not listed{% endif %}</p>
     </div>
     <span class="score-badge {% if pct >= 60 %}score-high{% elif pct >= 35 %}score-medium{% else %}score-low{% endif %}">
-      {{ pct }}% match
+      {{ pct }}% match{% if job.claude_score is not none %} ✦{% endif %}
     </span>
   </div>
 
@@ -196,6 +204,17 @@ TEMPLATE = """<!DOCTYPE html>
     {% for skill in job.matched_skills %}
     <span class="skill-tag">{{ skill }}</span>
     {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if job.fit_reasoning %}
+  <div class="claude-analysis">
+    <p class="fit-reasoning">{{ job.fit_reasoning }}</p>
+    <div class="claude-meta">
+      {% if job.growth_potential %}<span>Growth: {{ job.growth_potential }}</span>{% endif %}
+      {% if job.key_match %}<span>{{ job.key_match }}</span>{% endif %}
+      {% if job.concern and job.concern != "none" %}<span class="claude-concern">⚠ {{ job.concern }}</span>{% endif %}
+    </div>
   </div>
   {% endif %}
 

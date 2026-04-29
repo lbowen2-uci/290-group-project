@@ -48,15 +48,19 @@ def run_scrapers(
     config: dict,
     enabled_scrapers: list[str] | None = None,
     max_results_per_scraper: int = 50,
+    search_queries: list[str] | None = None,
 ) -> list[Job]:
     """
     Run all enabled scrapers concurrently and return deduplicated results.
+    When search_queries is provided (Claude-generated), each scraper is run
+    once per query — max_results is divided across queries to keep volume stable.
 
     Args:
         profile:                   The user's profile.
         config:                    API keys and settings dict.
-        enabled_scrapers:          Names of scrapers to run. Defaults to all three.
-        max_results_per_scraper:   Max results to request from each scraper.
+        enabled_scrapers:          Names of scrapers to run. Defaults to configured list.
+        max_results_per_scraper:   Max results to request per (scraper, query) pair.
+        search_queries:            Claude-generated queries; falls back to profile query if None.
 
     Returns:
         Deduplicated list of Job objects from all sources.
@@ -70,22 +74,31 @@ def run_scrapers(
         print("[manager] No scrapers configured.")
         return []
 
+    queries = search_queries or [None]  # None = each scraper uses its default
+    per_query_max = max(10, max_results_per_scraper // len(queries))
+
+    total_tasks = len(scrapers) * len(queries)
+    print(f"\n[manager] Running {len(scrapers)} scraper(s) × {len(queries)} query/queries = {total_tasks} task(s) in parallel...")
+    if search_queries:
+        print(f"[manager] Queries: {search_queries}")
+
     all_jobs: list[Job] = []
 
-    print(f"\n[manager] Running {len(scrapers)} scraper(s) in parallel...")
+    with ThreadPoolExecutor(max_workers=min(total_tasks, 12)) as executor:
+        future_to_label = {}
+        for s in scrapers:
+            for q in queries:
+                future = executor.submit(s.fetch, profile, per_query_max, q)
+                label = f"{s.name}:{q or 'default'}"
+                future_to_label[future] = label
 
-    with ThreadPoolExecutor(max_workers=len(scrapers)) as executor:
-        future_to_scraper = {
-            executor.submit(s.fetch, profile, max_results_per_scraper): s.name
-            for s in scrapers
-        }
-        for future in as_completed(future_to_scraper):
-            name = future_to_scraper[future]
+        for future in as_completed(future_to_label):
+            label = future_to_label[future]
             try:
                 jobs = future.result()
                 all_jobs.extend(jobs)
             except Exception as e:
-                print(f"[manager] Scraper '{name}' raised an error: {e}")
+                print(f"[manager] '{label}' raised an error: {e}")
 
     before = len(all_jobs)
     unique_jobs = _deduplicate(all_jobs)

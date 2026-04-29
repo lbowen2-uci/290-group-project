@@ -42,8 +42,8 @@ class RemotiveScraper(BaseScraper):
 
     name = "remotive"
 
-    def fetch(self, profile: UserProfile, max_results: int = 50) -> list[Job]:
-        search_term = profile.to_search_query()
+    def fetch(self, profile: UserProfile, max_results: int = 50, query_override: str | None = None) -> list[Job]:
+        search_term = query_override or profile.to_search_query()
         category = _guess_category(profile)
 
         params = {"limit": min(max_results, 100)}

@@ -25,7 +25,7 @@ class JSearchScraper(BaseScraper):
 
     name = "jsearch"
 
-    def fetch(self, profile: UserProfile, max_results: int = 50) -> list[Job]:
+    def fetch(self, profile: UserProfile, max_results: int = 50, query_override: str | None = None) -> list[Job]:
         api_key = self.config.get("rapidapi_key", "")
 
         if not api_key:
@@ -35,8 +35,8 @@ class JSearchScraper(BaseScraper):
         # JSearch returns ~10 results per page; cap at 5 pages to stay within free tier
         num_pages = max(1, min(max_results // 10, 5))
 
-        query = profile.to_search_query()
-        if profile.location:
+        query = query_override or profile.to_search_query()
+        if profile.location and not query_override:
             query = f"{query} in {profile.location}"
 
         params = {
