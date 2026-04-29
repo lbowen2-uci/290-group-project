@@ -20,12 +20,11 @@ class UserProfile:
 
     def to_search_query(self) -> str:
         """Build a concise search string for job API queries."""
-        parts = []
         if self.job_titles:
-            parts.append(self.job_titles[0])
+            return self.job_titles[0]
         if self.skills:
-            parts.extend(self.skills[:5])
-        return " ".join(parts)
+            return " ".join(self.skills[:3])
+        return ""
 
     def to_profile_text(self) -> str:
         """Combine all profile fields into a single text blob for embedding."""

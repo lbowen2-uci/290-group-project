@@ -117,5 +117,6 @@ def parse_resume(pdf_path: str) -> UserProfile:
     print(f"  Titles:     {', '.join(profile.job_titles) or '(not detected)'}")
     print(f"  Experience: {profile.experience_years} years")
     print(f"  Education:  {profile.education or '(not detected)'}")
+    print(f"  Location:   {profile.location or '(use --location to set)'}")
 
     return profile

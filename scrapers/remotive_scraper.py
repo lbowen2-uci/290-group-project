@@ -95,7 +95,7 @@ class RemotiveScraper(BaseScraper):
 def _parse_salary(job: Job, salary_str: str) -> Job:
     """Best-effort salary range extraction from Remotive's free-text salary field."""
     import re
-    numbers = re.findall(r'\$?([\d,]+)', salary_str.replace(",", ""))
+    numbers = re.findall(r'\$?([\d,]+)', salary_str)
     nums = [float(n.replace(",", "")) for n in numbers if n]
     if len(nums) >= 2:
         job.salary_min = min(nums)

@@ -31,15 +31,17 @@ class JobSpyScraper(BaseScraper):
 
         sites = self.config.get("jobspy_sites", self.DEFAULT_SITES)
         search_term = profile.to_search_query()
-        location = profile.location if not profile.remote_ok else "remote"
+        location = profile.location or None
 
-        print(f"[{self.name}] Searching: '{search_term}' | Location: '{location}' | Sites: {sites}")
+        remote_label = " | Remote: Yes" if profile.remote_ok else ""
+        print(f"[{self.name}] Searching: '{search_term}' | Location: '{location or 'any'}'{remote_label} | Sites: {sites}")
 
         try:
             df = scrape_jobs(
                 site_name=sites,
                 search_term=search_term,
-                location=location if location else None,
+                location=location,
+                is_remote=profile.remote_ok,
                 results_wanted=max_results,
                 hours_old=72,          # jobs posted in last 3 days
                 country_indeed="USA",
