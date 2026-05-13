@@ -3,6 +3,7 @@ Aggregate statistics computed from a scored job list and user profile.
 Pure Python — no I/O, no matplotlib. Easy to unit-test independently.
 """
 
+import math
 import re
 import collections
 from datetime import datetime, timedelta
@@ -144,15 +145,20 @@ def _skill_gap(profile: UserProfile, top_skills: list[dict], n: int = 10) -> dic
     }
 
 
+def _valid_salary(v) -> bool:
+    return v is not None and math.isfinite(v) and v > 0
+
+
 def _salary_distribution(jobs: list[Job]) -> dict:
     midpoints: list[float] = []
     for job in jobs:
-        if job.salary_min is not None and job.salary_max is not None:
-            midpoints.append((job.salary_min + job.salary_max) / 2)
-        elif job.salary_min is not None:
-            midpoints.append(job.salary_min)
-        elif job.salary_max is not None:
-            midpoints.append(job.salary_max)
+        lo, hi = job.salary_min, job.salary_max
+        if _valid_salary(lo) and _valid_salary(hi):
+            midpoints.append((lo + hi) / 2)
+        elif _valid_salary(lo):
+            midpoints.append(lo)
+        elif _valid_salary(hi):
+            midpoints.append(hi)
 
     if not midpoints:
         return {

@@ -1,6 +1,9 @@
 # --- Secrets ---
 .env
 
+# --- Saved profiles (kept local) ---
+saved_profiles/
+
 # --- Job search outputs (kept local) ---
 report.html
 jobs_output.csv

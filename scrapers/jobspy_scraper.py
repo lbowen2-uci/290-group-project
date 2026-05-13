@@ -18,7 +18,7 @@ class JobSpyScraper(BaseScraper):
     name = "jobspy"
 
     # Subset of sites to scrape — can be overridden via config
-    DEFAULT_SITES = ["linkedin", "indeed", "glassdoor", "zip_recruiter"]
+    DEFAULT_SITES = ["linkedin", "indeed"]
 
     def fetch(self, profile: UserProfile, max_results: int = 50, query_override: str | None = None) -> list[Job]:
         try:

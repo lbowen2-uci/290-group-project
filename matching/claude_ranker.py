@@ -22,10 +22,10 @@ _BATCH_PROMPT = """Evaluate the following job postings for the candidate describ
 For each job return a JSON object with:
 - "job_index": integer (matches the index below)
 - "adjusted_score": integer 0-100 representing overall fit
-- "fit_reasoning": 1-2 sentence explanation of why this is or isn't a strong match
+- "fit_reasoning": 3-5 word phrase summarizing fit (e.g. "good salary, skill gap in SQL")
 - "growth_potential": "high", "medium", or "low" — does this role advance their career goals?
 - "key_match": the single strongest alignment point between candidate and role
-- "concern": the single biggest gap or risk, or "none" if no significant concerns
+- "concern": 3-5 word phrase for the biggest gap or risk (e.g. "missing cloud exp"), or "none"
 
 Return a JSON array of these objects, one per job.
 

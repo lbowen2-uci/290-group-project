@@ -36,7 +36,7 @@ def get_config() -> dict:
         # --- JobSpy sites ---
         # Options: linkedin, indeed, glassdoor, zip_recruiter, google
         "jobspy_sites": _parse_list(
-            os.getenv("JOBSPY_SITES", "linkedin,indeed,glassdoor,zip_recruiter")
+            os.getenv("JOBSPY_SITES", "linkedin,indeed")
         ),
 
         # --- Matching mode ---

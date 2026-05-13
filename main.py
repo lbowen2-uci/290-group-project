@@ -19,7 +19,10 @@ Usage examples:
 """
 
 import argparse
+import dataclasses
+import json
 import sys
+from pathlib import Path
 
 from config import get_config
 from core.user_profile import UserProfile
@@ -64,8 +67,9 @@ def parse_args():
     parser.add_argument(
         "--output",
         choices=["csv", "excel", "html", "db", "all"],
-        default="csv",
-        help="Output format (default: csv).",
+        default=["csv"],
+        nargs="+",
+        help="Output format(s) (default: csv). Pass multiple e.g. --output csv html.",
     )
     parser.add_argument(
         "--matching",
@@ -92,14 +96,56 @@ def parse_args():
         metavar="N",
         help="Number of top results to include in output (default: 25).",
     )
+    parser.add_argument(
+        "--load-profile",
+        metavar="NAME",
+        nargs="?",
+        const="last",
+        help="Skip Q&A and load a saved profile. Omit NAME to load the last-used profile.",
+    )
+    parser.add_argument(
+        "--save-profile",
+        metavar="NAME",
+        help="Save the Q&A profile under a custom name for later reuse.",
+    )
     return parser.parse_args()
+
+
+_PROFILES_DIR = Path("saved_profiles")
+
+
+def _profile_path(name: str) -> Path:
+    _PROFILES_DIR.mkdir(exist_ok=True)
+    return _PROFILES_DIR / f"{name}.json"
+
+
+def save_profile(profile: UserProfile, name: str) -> None:
+    path = _profile_path(name)
+    path.write_text(json.dumps(dataclasses.asdict(profile), indent=2), encoding="utf-8")
+    print(f"[profile] Saved → {path}")
+
+
+def load_profile(name: str) -> UserProfile:
+    path = _profile_path(name)
+    if not path.exists():
+        print(f"[profile] No saved profile named '{name}'. Available:")
+        for p in sorted(_PROFILES_DIR.glob("*.json")):
+            print(f"  {p.stem}")
+        sys.exit(1)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    print(f"[profile] Loaded '{name}' from {path}")
+    return UserProfile(**{k: v for k, v in data.items() if k in {f.name for f in dataclasses.fields(UserProfile)}})
 
 
 def build_profile(args) -> UserProfile:
     """Load or collect the user profile based on --mode."""
     use_claude = not getattr(args, "no_claude", False)
+    load_name = getattr(args, "load_profile", None)
+    save_name = getattr(args, "save_profile", None)
 
-    if args.mode == "resume":
+    if load_name:
+        profile = load_profile(load_name)
+    elif args.mode == "resume":
         if not args.file:
             print("Error: --file is required when using --mode resume.")
             sys.exit(1)
@@ -130,6 +176,11 @@ def build_profile(args) -> UserProfile:
             from core.claude_client import is_available
             if is_available():
                 _enhance_qa_profile(profile)
+
+        # Always auto-save the last Q&A profile for quick reuse
+        save_profile(profile, "last")
+        if save_name:
+            save_profile(profile, save_name)
 
     # Apply CLI overrides
     if args.location:
@@ -196,21 +247,24 @@ def score_jobs(jobs, profile, mode: str):
 def write_output(
     jobs,
     profile,
-    output_format: str,
+    output_format,
     top_n: int,
     stats: dict | None = None,
     charts: dict | None = None,
 ):
     """Write results in the requested format(s) and always emit summary stats."""
     top_jobs = jobs[:top_n]
+    formats = set(output_format) if isinstance(output_format, list) else {output_format}
+    if "all" in formats:
+        formats = {"csv", "excel", "html", "db"}
 
-    if output_format in ("csv", "all"):
+    if "csv" in formats:
         export_csv(top_jobs)
-    if output_format in ("excel", "all"):
+    if "excel" in formats:
         export_excel(top_jobs)
-    if output_format in ("html", "all"):
+    if "html" in formats:
         export_html(top_jobs, profile, stats=stats, charts=charts)
-    if output_format in ("db", "all"):
+    if "db" in formats:
         save_results(top_jobs, profile)
 
     # Always write standalone stats files (cheap, always useful)
